@@ -8,6 +8,33 @@
 
 using namespace std;
 
+bool bfs(const unordered_map<int, set<int>> &graph, unordered_map<int, unordered_map<int, int>> &capacity,
+         int source, int sink, unordered_map<int, int> &parent)
+{
+    queue<int> q;
+    q.push(source);
+    parent.clear();
+    parent[source] = -1; // Mark the source node
+    while (!q.empty())
+    {
+        int u = q.front();
+        q.pop();
+
+        for (int v : graph.at(u))
+        {
+            // If there is remaining capacity and v is not visited
+            if (parent.find(v) == parent.end() && capacity[u][v] > 0)
+            {
+                parent[v] = u;
+                if (v == sink)
+                    return true; // Found path to sink
+                q.push(v);
+            }
+        }
+    }
+    return false;
+}
+
 void buildGraph(const vector<string> &dice, const string &word, unordered_map<int, set<int>> &graph)
 {
     int source = 0;
