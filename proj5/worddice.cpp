@@ -41,11 +41,12 @@ bool bfs(const unordered_map<int, set<int>> &graph, unordered_map<int, unordered
 }
 
 int edmondsKarp(unordered_map<int, set<int>> &graph, unordered_map<int, unordered_map<int, int>> &capacity,
-                int source, int sink, vector<int> &path)
+                int source, int sink, vector<int> &path, int wordLength)
 {
     int maxFlow = 0;
     unordered_map<int, int> parent;
     path.clear();
+    vector<int> diceOrder(wordLength, -1); // To store the dice index used for each letter in order
 
     while (bfs(graph, capacity, source, sink, parent))
     {
@@ -64,21 +65,29 @@ int edmondsKarp(unordered_map<int, set<int>> &graph, unordered_map<int, unordere
             capacity[v][u] += pathFlow;
         }
 
-        // Collect the dice indices used in the path for the result
+        // Collect the dice indices used in the path in order of appearance
         for (int v = sink; v != source; v = parent[v])
         {
             int u = parent[v];
             if (u != source && v != sink)
             {
-                path.push_back(u - 1); // Convert node number to dice index (0-based)
+                int letterIndex = v - (graph.size() - wordLength); // Calculate letter index from v
+                diceOrder[letterIndex] = u - 1;                    // Store the dice index (0-based)
             }
         }
 
         maxFlow += pathFlow;
     }
 
-    // Reverse the path to be in the correct order
-    reverse(path.begin(), path.end());
+    // Store the final path in the order of dice used to spell the word
+    for (int diceIndex : diceOrder)
+    {
+        if (diceIndex != -1)
+        {
+            path.push_back(diceIndex);
+        }
+    }
+
     return maxFlow;
 }
 
@@ -118,7 +127,7 @@ void printResult(const string &word, const vector<int> &path)
 {
     if (path.size() == word.size())
     {
-        for (int i = 0; i < path.size(); ++i)
+        for (size_t i = 0; i < path.size(); ++i)
         {
             cout << path[i];
             if (i < path.size() - 1)
@@ -176,7 +185,7 @@ int main(int argc, char *argv[])
         int sink = word.size() + dice.size() + 1;
 
         vector<int> path;
-        int maxFlow = edmondsKarp(graph, capacity, source, sink, path);
+        int maxFlow = edmondsKarp(graph, capacity, source, sink, path, word.size());
         if (maxFlow == word.size())
         {
             printResult(word, path);
